@@ -1,0 +1,6 @@
+sum the numbers till a space
+store that sum
+Loop till all numbers stored.
+
+1 stars - return highest stored number
+2 stars - return sum of 3 highest store numbers
