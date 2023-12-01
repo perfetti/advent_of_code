@@ -1,7 +1,7 @@
 // input.txt file loaded as a string
-// const input = require('fs').readFileSync('./input.txt', 'utf8');
+const input = require('fs').readFileSync('./input.txt', 'utf8');
 // const input = require('fs').readFileSync('./example.txt', 'utf8');
-const input = '1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet';
+// const input = '1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet';
 const regex = /(\d)/g;
 
 var matches = input.split('\n').map((line) => line.match(regex))
@@ -10,7 +10,8 @@ const numbers = matches.map((match) => {
   const last = match[match.length - 1];
   return parseInt(`${first}${last}`, 10);
 });
-
+const sum = numbers.reduce((acc, curr) => acc + curr, 0);
 console.log(numbers);
+console.log(sum);
 
 
