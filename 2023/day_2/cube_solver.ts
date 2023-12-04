@@ -1,10 +1,10 @@
-type ColorsAndLimits = {
+type ColorsAndCounts = {
   [key: string]: number
 } & Object
 
 type CubeState = {
   totalNumberOfCubes: number,
-  colorsAndLimits: ColorsAndLimits
+  colorsAndLimits: ColorsAndCounts
 }
 
 
@@ -12,7 +12,7 @@ type Round = {
   // Example Game line:
   rawString: string,
   totalNumberOfCubes: number,
-  colorsAndLimits: ColorsAndLimits,
+  colorsAndCounts: ColorsAndCounts,
 }
 
 const sampleGameString = 'Game 61: 7 blue, 5 green, 8 red; 12 blue, 1 red, 11 green; 15 blue, 14 red, 15 green; 14 red, 7 blue, 6 green; 9 blue; 3 green, 10 blue, 11 red'
@@ -23,7 +23,7 @@ class CubeSolver {
     colorsAndLimits: {}
   }
 
-  constructor(colorsAndLimits: ColorsAndLimits) {
+  constructor(colorsAndLimits: ColorsAndCounts) {
     // Count total number of cubes
     const totalNumberOfCubes = Object.values(colorsAndLimits).reduce((acc, limit) => acc + limit, 0);
     this.cubeState = {
@@ -40,7 +40,7 @@ class CubeSolver {
       roundValid = false
     }
 
-    const gameColors = Object.keys(round.colorsAndLimits);
+    const gameColors = Object.keys(round.colorsAndCounts);
     const stateColors = Object.keys(this.cubeState.colorsAndLimits);
     const allGameColorsValid = gameColors.filter((color) => stateColors.includes(color)).length !== gameColors.length
 
@@ -49,8 +49,8 @@ class CubeSolver {
         console.error(`Game ${round.rawString} has color ${color}, but the state does not`)
         roundValid = false;
       }
-      if(round.colorsAndLimits[color] > this.cubeState.colorsAndLimits[color]) {
-        console.error(`Game ${round.rawString} has ${round.colorsAndLimits[color]} cubes of color ${color}, but the state only has ${this.cubeState.colorsAndLimits[color]}`)
+      if(round.colorsAndCounts[color] > this.cubeState.colorsAndLimits[color]) {
+        console.error(`Game ${round.rawString} has ${round.colorsAndCounts[color]} cubes of color ${color}, but the state only has ${this.cubeState.colorsAndLimits[color]}`)
         roundValid = false;
       }
     })
@@ -85,17 +85,17 @@ class GameParser {
       let roundState: Round = {
         rawString: round,
         totalNumberOfCubes: 0,
-        colorsAndLimits: {}
+        colorsAndCounts: {}
       };
       const numberAndColorEntries = round.split(',').map((entry) => entry.trim()).map(this.parseNumberColorEntry);
 
       const roundCounts = numberAndColorEntries.reduce((acc, { color, limit }) => {
-        acc.colorsAndLimits[color] = limit;
+        acc.colorsAndCounts[color] = limit;
         acc.totalNumberOfCubes += limit;
         return acc;
       }, {
         totalNumberOfCubes: 0,
-        colorsAndLimits: {}
+        colorsAndCounts: {}
       } as Round)
 
       return {
@@ -141,6 +141,7 @@ let letUsSumTheGameNumbersWhereTheGameIsValid = 0;
 const fs = require('fs');
 const gamesString = fs.readFileSync('input.txt', 'utf8') as string;
 
+// Solve for part 1
 // Split the gamestring, and check them one by one for validity
 gamesString.split('\n').forEach((gameString) => {
   const gp = new GameParser(gameString);
@@ -158,6 +159,31 @@ gamesString.split('\n').forEach((gameString) => {
     letUsSumTheGameNumbersWhereTheGameIsValid += gp.gameNumber;
   }
 })
-
-
 console.log('letUsSumTheGameNumbersWhereTheGameIsValid', letUsSumTheGameNumbersWhereTheGameIsValid)
+
+
+// Solve for part 2
+// split the gamestring and find the highest number of cubes per color per game
+let sumOfFactors = 0;
+gamesString.split('\n').forEach((gameString) => {
+  const gp = new GameParser(gameString);
+  const minPerColor: ColorsAndCounts = {};
+
+  gp.rounds.forEach((round) => {
+    Object.entries(round.colorsAndCounts).forEach(([color, count]) => {
+      if (!minPerColor[color]) {
+        minPerColor[color] = count;
+      } else {
+        minPerColor[color] = Math.max(minPerColor[color], count);
+      }
+    })
+  })
+
+  console.log('minPerColor', minPerColor)
+  // Multiply all the values together
+  const factor = Object.values(minPerColor).reduce((acc, val) => acc * val, 1);
+  console.log('factor', factor)
+  sumOfFactors += factor;
+});
+console.log('sumOfFactors', sumOfFactors)
+
