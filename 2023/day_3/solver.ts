@@ -15,13 +15,13 @@ type PartNumber = GridDenizen & {
 
 const nonPeriodRegexMatcher = /(\d+)|([^\d.]+)/ig
 // Sample puzzle
-const engineSchematic = "\n467..114..\n...*......\n..35..633.\n......#...\n617*......\n.....+.58.\n..592.....\n......755.\n...$.*....\n.664.598.."
+// const engineSchematic = "\n467..114..\n...*......\n..35..633.\n......#...\n617*......\n.....+.58.\n..592.....\n......755.\n...$.*....\n.664.598.."
 const fs = require('fs');
-// const engineSchematic = fs.readFileSync('input.txt', 'utf8') as string;
+const engineSchematic = fs.readFileSync('input.txt', 'utf8') as string;
 
 // We want to view this as a 2D array of characters, then find any numbers that are not touching any symbols besides a . even diagnally
 const schematicLines = engineSchematic.split("\n").filter(line => line.length > 0)
-
+console.log(schematicLines)
 const partNumbers: PartNumber[] = []
 const whammies: Whammy[] = []
 
@@ -46,20 +46,18 @@ const addPartNumber = (partNumber: Omit<PartNumber, '_type'>) => {
 
 // Build list of PartNumbers and Whammies
 schematicLines.forEach((line, index) => {
-  const y = schematicLines.length - index
+  const y = index
 
   const matches = Array.from(line.matchAll(nonPeriodRegexMatcher))
 
   matches.forEach((match) => {
     const parsed = Number(match[0]);
-    // console.log("match:", match[0], " ", match.index, " ", match.length)
     if(isNaN(parsed)) {
       const whammy = addWhammy({
         _raw: match[0],
         x: match.index as number,
         y
       })
-      // console.log("y:", y, " ", whammy);
     } else {
       const partNumber = addPartNumber({
         _raw: match[0],
@@ -69,7 +67,6 @@ schematicLines.forEach((line, index) => {
         length: match[0].length
       })
     }
-    // console.log("y:", y, " ", parsed);
   })
 });
 
@@ -95,5 +92,10 @@ partNumbers.forEach((partNumber) => {
   }
 })
 
-console.log('Valid partNumbers:', validPartNumbers)
+// console.log('Valid partNumbers:', validPartNumbers)
+console.log('Whammies[0]:', whammiesByRow[0])
+console.log('Whammies[1]:', whammiesByRow[1])
+console.log('PartNumbers[0]:', partNumbersByRow[0])
+console.log('PartNumbers[1]:', partNumbersByRow[1])
+console.log(validPartNumbers.map(partNumber => partNumber.partNumber))
 console.log('Added up the partNumbers:', validPartNumbers.reduce((sum, partNumber) => sum + partNumber.partNumber, 0))
