@@ -1,8 +1,9 @@
 // input.txt file loaded as a string
-// const input = require('fs').readFileSync('./input.txt', 'utf8');
-const input = 'two1nine\neightwothree\nabcone2threexyz\nxtwone3four\n4nineeightseven2\nzoneight234\n7pqrstsixteen'
-const regex = /(\d|one|two|three|four|five|six|seven|eight|nine)/g;
-const convertStringtoNumberString = (str) => {
+import fs from 'fs';
+const input = fs.readFileSync('./input.txt', 'utf8');
+// const input = 'eightcdl979gxzv97eightwogdv\ntwo1nine\neightwothree\nabcone2threexyz\nxtwone3four\n4nineeightseven2\nzoneight234\n7pqrstsixteen'
+const regex = /(\d|eightwo|eighthree|threeight|twone|nineight|one|two|three|four|five|six|seven|eight|nine)/g;
+const convertStringtoNumberString = (str, first = true) => {
   switch (str) {
     case 'one':
       return '1';
@@ -22,17 +23,41 @@ const convertStringtoNumberString = (str) => {
       return '8';
     case 'nine':
       return '9';
+    case 'eightwo':
+      return first ? '8' : '2';
+    case 'eighthree':
+      return first ? '8' : '3';
+    case 'threeight':
+      return first ? '3' : '8';
+    case 'twone':
+      return first ? '2' : '1';
+    case 'nineight':
+      return first ? '9' : '8';
     default:
-      return str
+      return [str]
   }
 }
+let result = '';
 
-var matches = input.split('\n').map((line) => line.match(regex))
-const numbers = matches.map((match) => {
-  const first = convertStringtoNumberString(match[0]);
-  const last = convertStringtoNumberString(match[match.length - 1]);
-  return parseInt(`${first}${last}`, 10);
+const numbers = input.split('\n').map((line) => {
+  const match = line.match(regex);
+  const {[0]: first, [match.length - 1]: last} = match;
+  const parsedFirst = convertStringtoNumberString(first, true);
+  const parsedLast = convertStringtoNumberString(last, false);
+
+  const log = ['\n\nline ', line,
+    '\nfirst ', first,
+    ' parsedFirst ', parsedFirst,
+    '\nlast ', last,
+    ' parsedLast ', parsedLast].join('');
+  result += log;
+  console.log(log);
+  return parseInt(`${parsedFirst}${parsedLast}`, 10);
 });
+
+// write result to file
+fs.writeFileSync('./result.txt', result);
+
 const sum = numbers.reduce((acc, curr) => acc + curr, 0);
 console.log(numbers);
 console.log(sum);
