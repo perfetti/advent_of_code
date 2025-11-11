@@ -20,3 +20,6 @@ function matches(message: string, obj1: Array<any>, obj2: Array<any>) {
 
 matches("keys are as expected", keys, expectedKeys);
 matches("locks are as expected", locks, expectedLocks);
+
+console.log("We expect 3 fits");
+console.log("We got", inputParser.countFits());

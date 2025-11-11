@@ -10,6 +10,7 @@ export class InputParser {
     this.filePath = inputFilePath;
   }
 
+  // Parses the input file and sets them internally then returns the keys and locks.
   parse(): { keys: InputKey[], locks: InputLock[] } {
     const input = fs.readFileSync(this.filePath, "utf8");
     const keys: InputKey[] = [];
@@ -27,7 +28,23 @@ export class InputParser {
     return { keys, locks };
   }
 
-  private convertChunkToInputKeyOrLock(chunk: string): InputKey | InputLock {
+  // Count function checks the keys against the locks.
+  // Each column is added together and much be under 5  to be a fit.
+  countFits(): number {
+    let fitCount = 0;
+    this.keys.forEach((key) => {
+      this.locks.forEach((lock) => {
+        if (this.isFit(key, lock)) fitCount++;
+      });
+    });
+    return fitCount;
+  }
+
+  isFit(key: InputKey, lock: InputLock): boolean {
+    return key.every((k, index) => k + lock[index] <= 5);
+  }
+
+  convertChunkToInputKeyOrLock(chunk: string): InputKey | InputLock {
     const lines = chunk.split("\n")
     const numberOfCols = lines[0]?.length ?? 0;
     const result: InputKey = [];
