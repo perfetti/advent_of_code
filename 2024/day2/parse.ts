@@ -1,40 +1,63 @@
 import fs from "fs";
 
-const input = fs.readFileSync("./sample.txt", "utf8");
-const lines = input.split("\n");
-type Report = { levels: number[], safe: boolean };
-const reports: Report[] = [];
-let safeReportCount = 0;
+const sampleInput = fs.readFileSync("./sample.txt", "utf8");
+const sampleInputLines = sampleInput.split("\n");
+const input = fs.readFileSync("./input.txt", "utf8");
+const inputLines = input.split("\n");
+type Report = { levels: number[], safe: boolean, errorReason: string };
 
-lines.forEach((line) => {
+
+
+function parseSingleReport(line: string): Report {
   let isSafe = true;
-  let isRising: boolean | null = null;
-  const levelStrings = line.split(/\s+/)
+    let errorReason = "";
+    const levelStrings = line.split(/\s+/)
 
-  const levels = levelStrings.map((num, index) => {
-    let lastLevel = parseInt(levelStrings[index - 1])
-    const currentLevel = parseInt(num);
+    const levels = levelStrings.map((curLevelString, index) => {
+    const currentLevel = parseInt(curLevelString);
+    const penUltimateLevel = parseInt(levelStrings[index - 2]);
+    const lastLevel = parseInt(levelStrings[index - 1]);
 
-    try {
-      if(lastLevel !== null) {
-        const delta = lastLevel - currentLevel
-        const distance = Math.abs(delta);
-        const rose = delta >= 0;
 
-        if(distance < 1 || distance > 3) throw new Error("Report is not safe, levels changing WILDLY");
-        if(isRising !== null && isRising !== rose) throw new Error("Report is not safe, levels are not consistently rising or falling");
+      try {
+        if(lastLevel) {
+          const distance = Math.abs(lastLevel - currentLevel);
+          const wasRising = penUltimateLevel < lastLevel;
+          const isRising = lastLevel < currentLevel;
+
+          // console.log(penUltimateLevel, lastLevel, currentLevel, 'wasRising', wasRising, 'isRising', isRising);
+
+          if(distance == 0) throw new Error("Report is not safe, levels changing TOO LITTLE");
+          if(distance > 3) throw new Error("Report is not safe, levels changing TOO MUCH");
+          if(penUltimateLevel && wasRising !== isRising) throw new Error("Report is not safe, levels are not consistently rising or falling");
+        }
+      } catch (error) {
+        isSafe = false;
+        errorReason = error.message;
       }
-    } catch (error) {
-      isSafe = false;
-    }
 
-    lastLevel = currentLevel
-    return currentLevel
+      return currentLevel
+    });
+
+  return { levels, safe: isSafe, errorReason };
+}
+
+function parseFullReports(lines: string[]): [Report[], number] {
+  const reports: Report[] = [];
+  let safeReportCount = 0;
+
+  lines.forEach((line) => {
+    const { levels, safe, errorReason } = parseSingleReport(line);
+
+    if(safe) safeReportCount++;
+    reports.push({ levels, safe, errorReason });
   });
 
-  if(isSafe) safeReportCount++;
-  reports.push({ levels, safe: isSafe });
-});
+  console.log(reports.slice(0, 5));
+  console.log("Safe report count:", safeReportCount);
+  return [reports, safeReportCount];
+}
+// console.log(parseSingleReport("1 3 6 7 9"));
 
-console.log(reports);
-console.log("Safe report count:", safeReportCount);
+parseFullReports(sampleInputLines);
+// parseFullReports(inputLines);
