@@ -18,7 +18,6 @@ function parseSingleReport(line: string): Report {
     const penUltimateLevel = parseInt(levelStrings[index - 2]);
     const lastLevel = parseInt(levelStrings[index - 1]);
 
-
       try {
         if(lastLevel) {
           const distance = Math.abs(lastLevel - currentLevel);
@@ -59,5 +58,5 @@ function parseFullReports(lines: string[]): [Report[], number] {
 }
 // console.log(parseSingleReport("1 3 6 7 9"));
 
-parseFullReports(sampleInputLines);
-// parseFullReports(inputLines);
+// parseFullReports(sampleInputLines);
+parseFullReports(inputLines);
