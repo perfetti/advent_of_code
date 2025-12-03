@@ -21,54 +21,65 @@ function parseCommand(command: string): Command {
 class Safe {
   public dialSize:  number = 100
   public timesWeStopAt0: number = 0;
+  public timesWePassThrough0: number = 0;
   public position: number = 50;
   public commands: Command[] = [];
 
   constructor(public input: string) {
     this.position = 50;
     this.timesWeStopAt0 = 0;
+    this.timesWePassThrough0 = 0;
     this.commands = input.split("\n").map(parseCommand);
   }
 
   execute() {
+    console.log("Starting at position", this.position);
     this.commands.forEach((command, index) => {
       // console.log("Executing command", index+1, command);
       this.move(command);
     });
   }
 
-  move({direction, amount}: Command) {
-    if(direction === Direction.Right) {
-      this.turnRight(amount % this.dialSize);
-    } else if (direction === Direction.Left) {
-      this.turnLeft(amount % this.dialSize);
-    } else {
-      throw new Error(`Invalid direction: ${direction}`);
-    }
+  move = ({direction, amount}: Command) => {
+    const startingPosition = this.position;
+    const directionIsRight = direction === Direction.Right;
+    const moveFunc = directionIsRight ? this.tickRight : this.tickLeft;
 
-    if(this.position === 0) { this.timesWeStopAt0++; }
+    let curPos;
+    for(var i=0;i<amount;i++){
+      curPos = moveFunc()
+      if(curPos == 0){
+        console.log("Hit 0")
+        this.timesWePassThrough0++
+      }
+    }
+    console.log(
+      "Moved", directionIsRight ? "right" : "left", `${amount} Ticks`,
+      'from', startingPosition, 'to', curPos
+    )
   }
 
-  turnLeft(delta: number) {
-    const lastPosition = this.position;
-    const nextPosition = (this.position - delta);
+  tickLeft = () => {
+    const lastPos = this.position;
+    let newPos = this.position-1
 
-    if(nextPosition < 0) {
-      this.position = this.dialSize + nextPosition;
+    if(newPos < 0) {
+      this.position = 99
     } else {
-      this.position = nextPosition;
+      this.position = newPos;
     }
 
-    console.log("Turning left by", delta, "from", lastPosition, "to", this.position);
+    console.log('moving from ', this.position, 'to', newPos)
+    return this.position;
   }
 
-  turnRight(delta: number) {
-    const lastPosition = this.position;
-    const nextPosition = this.position + delta;
-
-    this.position = (this.position + delta) % this.dialSize;
-
-    console.log("Turning right by", delta, "from", lastPosition, "to", this.position);
+  tickRight = () => {
+    if(this.position === 99) {
+      this.position = 0
+    } else {
+      this.position++
+    }
+    return this.position;
   }
 }
 
@@ -77,3 +88,4 @@ const safe = new Safe(input);
 safe.execute();
 console.log("Final position:", safe.position);
 console.log("Times we stopped at 0:", safe.timesWeStopAt0);
+console.log("Times we passed through 0:", safe.timesWePassThrough0);
