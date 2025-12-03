@@ -3,34 +3,26 @@ import fs from 'fs';
 // Lets' the debugging work.
 const INPUT_FILE = __dirname + "/input.txt"
 
-export function extractVoltage(battery: string): number {
-  let highFirst: number;
-  let highSecond: number;
-
-  const [first, second, ...rest] = battery.split('');
-  highFirst = parseInt(first);
-  highSecond = parseInt(second);
-
-  const ints = rest.map((i) => parseInt(i));
-
-  ints.forEach((value: number, index: number) => {
-    if(value > highFirst && index !== ints.length - 1) {
-      highFirst = value;
-      highSecond = ints[index + 1];
-    } else if (value > highSecond) {
-      highSecond = value;
+function findCorrectVoltage(battery: string): number {
+  const digits = battery.split('').map(Number);
+  let maxVal = 0;
+  for (let i = 0; i < digits.length; i++) {
+    for (let j = i + 1; j < digits.length; j++) {
+      const val = digits[i] * 10 + digits[j];
+      if (val > maxVal) maxVal = val;
     }
-  })
-
-  return highFirst*10 + highSecond;
+  }
+  return maxVal;
 }
 
-const batteries = fs.readFileSync(INPUT_FILE, "utf8").split("\n");
+const batteries = fs.readFileSync(INPUT_FILE, "utf8").split("\n").filter(l => l.trim());
 
 let voltageCount = 0;
+let mismatches = 0;
 
 batteries.forEach((battery: string, battery_index: number) => {
-  const delta = extractVoltage(battery);
+  const delta = findCorrectVoltage(battery);
+
   const oldVoltage = voltageCount
   voltageCount += delta;
 
