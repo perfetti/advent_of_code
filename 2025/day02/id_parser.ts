@@ -28,15 +28,9 @@ comma_separated_values.forEach((raw_range: string) => {
   // Check everything from the range
   range.forEach((value) => {
     const stringVal = value.toString()
-    const length = stringVal.length
-    // Return if odd length, can't be repeating patter
-    if(length % 2 == 1) return
-
-    const firstHalf = stringVal.substring(0, length/2);
-    const secondHalf = stringVal.substring(length/2);
-
+    const isRepeated = /^(.+)\1+$/g.test(stringVal);
     // If it is repeating pattern it is invalid and we throw it into bad values
-    if(firstHalf == secondHalf) {
+    if(isRepeated) {
       console.log("Bad number detected", value)
       bad_values.push(value);
     }
