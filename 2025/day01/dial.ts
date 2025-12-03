@@ -72,7 +72,7 @@ class Safe {
   }
 }
 
-const input = fs.readFileSync("./demo_input.txt", "utf8");
+const input = fs.readFileSync("./input.txt", "utf8");
 const safe = new Safe(input);
 safe.execute();
 console.log("Final position:", safe.position);
