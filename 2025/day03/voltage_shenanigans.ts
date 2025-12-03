@@ -3,11 +3,7 @@ import fs from 'fs';
 // Lets' the debugging work.
 const INPUT_FILE = __dirname + "/input.txt"
 
-const batteries = fs.readFileSync(INPUT_FILE, "utf8").split("\n");
-
-let voltageCount = 0;
-
-batteries.forEach((battery: string, battery_index: number) => {
+export function extractVoltage(battery: string): number {
   let highFirst: number;
   let highSecond: number;
 
@@ -16,6 +12,7 @@ batteries.forEach((battery: string, battery_index: number) => {
   highSecond = parseInt(second);
 
   const ints = rest.map((i) => parseInt(i));
+
   ints.forEach((value: number, index: number) => {
     if(value > highFirst && index !== ints.length - 1) {
       highFirst = value;
@@ -23,10 +20,17 @@ batteries.forEach((battery: string, battery_index: number) => {
     } else if (value > highSecond) {
       highSecond = value;
     }
-
   })
 
-  const delta = highFirst*10 + highSecond;
+  return highFirst*10 + highSecond;
+}
+
+const batteries = fs.readFileSync(INPUT_FILE, "utf8").split("\n");
+
+let voltageCount = 0;
+
+batteries.forEach((battery: string, battery_index: number) => {
+  const delta = extractVoltage(battery);
   const oldVoltage = voltageCount
   voltageCount += delta;
 
