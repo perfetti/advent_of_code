@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-const INPUT_FILE = __dirname + "/demo_input.txt"
+const INPUT_FILE = __dirname + "/input.txt"
 
 const input = fs.readFileSync(INPUT_FILE, "utf8");
 const lines = input.split("\n").map((line) => line.split(""));
@@ -33,23 +33,41 @@ function isAccessible(rowIndex: number, colIndex: number) {
   return toilerPaperCount < 4;
 }
 
-//
-// Logic time
-//
+type RowLocation = [number, number];
 
-let accessiblePaperRolls = 0;
-for(let rowIndex=0; rowIndex<lines.length; rowIndex++){
-  const row = lines[rowIndex];
-  console.log(row);
-  for(let colIndex=0; colIndex<row.length; colIndex++){
-    console.log(row[colIndex]);
+function mapAccessiblePaperRolls() {
+  let accessiblePaperRolls: RowLocation[] = [];
 
-    if(row[colIndex] === '@'){
-      if(isAccessible(rowIndex, colIndex)){
-        accessiblePaperRolls++;
+  for(let rowIndex=0; rowIndex<lines.length; rowIndex++){
+    const row = lines[rowIndex];
+    for(let colIndex=0; colIndex<row.length; colIndex++){
+      if(row[colIndex] === '@'){
+        if(isAccessible(rowIndex, colIndex)){
+          accessiblePaperRolls.push([rowIndex, colIndex]);
+        }
       }
     }
   }
+  return accessiblePaperRolls;
 }
 
+//
+// Logic time
+//
+let accessiblePaperRolls = 0;
+let currentAccessiblePaperRolls: RowLocation[] = mapAccessiblePaperRolls();
+let round = 1;
+while(currentAccessiblePaperRolls.length > 0) {
+  accessiblePaperRolls += currentAccessiblePaperRolls.length;
+  console.log("During round", round, "there are", currentAccessiblePaperRolls.length, "accessible paper rolls");
+  console.log("Total accessible paper rolls so far:", accessiblePaperRolls);
+
+  while(currentAccessiblePaperRolls.length > 0) {
+    const [rowIndex, colIndex] = currentAccessiblePaperRolls.shift() as RowLocation;
+    lines[rowIndex][colIndex] = 'x';
+  }
+
+  currentAccessiblePaperRolls = mapAccessiblePaperRolls();
+  round++;
+}
 console.log(accessiblePaperRolls);
