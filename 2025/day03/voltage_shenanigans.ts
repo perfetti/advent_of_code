@@ -37,8 +37,8 @@ type IndexedValue = {
   index: number;
 }
 
-function find12DigitBatteryVoltage(battery: string, log=false) {
-  console.log("Working on ", battery)
+export function find12DigitBatteryVoltage(battery: string, log=false) {
+  if (log) console.log("Working on ", battery)
   let digits: IndexedValue[] = battery.split('').map((value, index) => ({value: Number(value), index}) as IndexedValue)
 
   // We want to find the largest EARLIEST digit.
@@ -47,12 +47,12 @@ function find12DigitBatteryVoltage(battery: string, log=false) {
 
   const matchingValuesInFirstDigits = firstDigits.filter(d => d.value === earliestDigit.value);
 
-  if(matchingValuesInFirstDigits.length > 1) {
+  if(log && matchingValuesInFirstDigits.length > 1) {
     console.log('multiple matching values in first digits', matchingValuesInFirstDigits);
   }
 
-  const voltages = matchingValuesInFirstDigits.map(d => generateVoltageFromEarliestDigit(d, [...digits.map((d) => ({value: d.value, index: d.index}))], log));
-  console.log(voltages);
+  const voltages = matchingValuesInFirstDigits.map(d => generateVoltageFromEarliestDigit(d, digits.map((d) => ({value: d.value, index: d.index})), log));
+  if (log) console.log(voltages);
   return Math.max(...voltages);
 }
 
@@ -86,6 +86,68 @@ function printDigits(digits: IndexedValue[]) {
   console.log(digits.map(d => d.value).join(""));
 }
 
+/**
+ * Brute force / optimal solution using Dynamic Programming
+ * Finds the maximum 12-digit number by selecting exactly 12 digits
+ * while maintaining their original order.
+ *
+ * Uses DP: dp[i][j] = max number using first i digits, selecting exactly j digits
+ */
+export function findOptimal12DigitVoltage(battery: string): number {
+  const digits = battery.split('').map(Number);
+  const n = digits.length;
+  const k = 12;
+
+  // dp[i][j] = maximum number (as BigInt) using first i digits, selecting exactly j digits
+  // Use BigInt to handle large numbers
+  const dp: (bigint | null)[][] = Array(n + 1).fill(null).map(() => Array(k + 1).fill(null));
+
+  // Base case: using 0 digits, selecting 0 digits = 0
+  dp[0][0] = 0n;
+
+  // Base case: using any prefix, selecting 0 digits = 0
+  for (let i = 1; i <= n; i++) {
+    dp[i][0] = 0n;
+  }
+
+  // Base case: using 0 digits, selecting j > 0 digits = impossible (null)
+  for (let j = 1; j <= k; j++) {
+    dp[0][j] = null;
+  }
+
+  // Fill DP table
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= k; j++) {
+      const digit = BigInt(digits[i - 1]);
+
+      // Option 1: Don't take digit at position i-1
+      const skip = dp[i - 1][j];
+
+      // Option 2: Take digit at position i-1
+      const take = dp[i - 1][j - 1];
+      const takeValue = take !== null ? take * 10n + digit : null;
+
+      // Choose maximum
+      if (skip === null && takeValue === null) {
+        dp[i][j] = null;
+      } else if (skip === null) {
+        dp[i][j] = takeValue;
+      } else if (takeValue === null) {
+        dp[i][j] = skip;
+      } else {
+        dp[i][j] = skip > takeValue ? skip : takeValue;
+      }
+    }
+  }
+
+  const result = dp[n][k];
+  if (result === null) {
+    throw new Error(`Cannot form 12-digit number from battery of length ${n}`);
+  }
+
+  return Number(result);
+}
+
 const batteries = fs.readFileSync(INPUT_FILE, "utf8").split("\n").filter(l => l.trim());
 
 let voltageCount = 0;
@@ -94,17 +156,30 @@ let mismatches = 0;
 
 batteries.forEach((battery: string, battery_index: number) => {
   const delta = findCorrectVoltage(battery);
-  const new12DigitDelta = find12DigitBatteryVoltage(battery);
+  const optimal12Digit = findOptimal12DigitVoltage(battery);
+  const my12Digit = find12DigitBatteryVoltage(battery);
+
+  if (optimal12Digit !== my12Digit) {
+    mismatches++;
+    console.log(`\n✗ MISMATCH at Index${battery_index+1}:`);
+    console.log(`  Your solution: ${my12Digit}`);
+    console.log(`  Optimal solution: ${optimal12Digit}`);
+    console.log(`  Battery: ${battery.substring(0, 80)}...`);
+  }
 
   const oldVoltage = voltageCount
   const oldVoltagePartTwo = voltageCountPartTwo;
   voltageCount += delta;
-  voltageCountPartTwo += new12DigitDelta;
+  voltageCountPartTwo += optimal12Digit;
 
-  console.log(`Index${battery_index+1}`, 'oldVoltage', oldVoltage, 'delta', delta, 'voltageCount', voltageCount);
-  console.log(`Index${battery_index+1}`, 'oldVoltagePartTwo', oldVoltagePartTwo, 'delta', new12DigitDelta, 'voltageCountPartTwo', voltageCountPartTwo);
+  if (battery_index < 5 || optimal12Digit !== my12Digit) {
+    console.log(`Index${battery_index+1}`, 'oldVoltage', oldVoltage, 'delta', delta, 'voltageCount', voltageCount);
+    console.log(`Index${battery_index+1}`, 'oldVoltagePartTwo', oldVoltagePartTwo, 'delta', optimal12Digit, 'voltageCountPartTwo', voltageCountPartTwo);
+  }
 });
 
+console.log("\n=== SUMMARY ===");
+console.log(`Total mismatches: ${mismatches} out of ${batteries.length}`);
 console.log("Total voltage count:", voltageCount);
 console.log("Total voltage count part two:", voltageCountPartTwo);
 
